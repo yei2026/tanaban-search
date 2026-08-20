@@ -126,6 +126,7 @@
             <th>カラー</th>
             <th>品名</th>
             <th>JAN</th>
+            <th>品番カラー</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -193,6 +194,7 @@ async function init() {
       <td>${escapeHtml(item.color)}</td>
       <td>${escapeHtml(item.hinmei)}</td>
       <td>${escapeHtml(item.jan)}</td>
+      <td>${escapeHtml(item.hinban + item.color)}</td>
     </tr>
   `).join('');
   tbody.innerHTML = rows;
@@ -200,7 +202,7 @@ async function init() {
   $(table).DataTable({
     language: {
       search: '',
-      searchPlaceholder: '品番・JAN・品名で検索',
+      searchPlaceholder: '品番・カラー・品番+カラー・JAN・品名で検索',
       lengthMenu: '_MENU_ 件ずつ表示',
       info: '_TOTAL_件中 _START_〜_END_件を表示',
       infoEmpty: '該当なし',
@@ -210,6 +212,11 @@ async function init() {
     },
     pageLength: 25,
     order: [],
+    // 品番カラー列(6列目)は「品番+カラー11桁」でも検索できるようにするための隠し列。
+    // 画面には表示しないが、検索対象からは外さない。
+    columnDefs: [
+      { targets: 5, visible: false }
+    ],
   });
 }
 
