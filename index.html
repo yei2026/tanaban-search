@@ -128,45 +128,53 @@
 <script>
 function getCode() {
   const params = new URLSearchParams(window.location.search);
-  return (params.get('code') || '').trim();
+  const raw = (params.get('code') || '').trim();
+  if (!raw) return [];
+  // 1社が複数のニッターコードを持つ場合は "?code=7100,7175" のようにカンマ区切りで指定する
+  return [...new Set(raw.split(',').map(s => s.trim()).filter(Boolean))];
 }
 
 async function init() {
-  const code = getCode();
+  const codes = getCode();
   const statusArea = document.getElementById('statusArea');
   const companyLabel = document.getElementById('companyLabel');
   const table = document.getElementById('tanabanTable');
 
-  if (!code) {
+  if (codes.length === 0) {
     statusArea.textContent = 'URLに会社コードが指定されていません。配布されたQRコード、またはURLを再度ご確認ください。';
     statusArea.classList.add('error');
     companyLabel.textContent = '未指定';
     return;
   }
 
-  let res;
-  try {
-    res = await fetch(`data/${encodeURIComponent(code)}.json`, { cache: 'no-store' });
-  } catch (e) {
-    statusArea.textContent = '通信エラーが発生しました。電波の良い場所で再度お試しください。';
-    statusArea.classList.add('error');
-    return;
-  }
+  const results = await Promise.all(codes.map(async code => {
+    try {
+      const res = await fetch(`data/${encodeURIComponent(code)}.json`, { cache: 'no-store' });
+      if (!res.ok) return null;
+      return await res.json();
+    } catch (e) {
+      return null;
+    }
+  }));
 
-  if (!res.ok) {
+  const found = results.filter(Boolean);
+
+  if (found.length === 0) {
     statusArea.textContent = '該当する棚番データが見つかりません。URL・QRコードが正しいかご確認のうえ、タビオ奈良までご連絡ください。';
     statusArea.classList.add('error');
     companyLabel.textContent = '該当なし';
     return;
   }
 
-  const data = await res.json();
-  companyLabel.textContent = `${data.niitaa || ''}（コード: ${data.code}）／全${data.count}件`;
+  const label = found.map(d => `${d.niitaa || ''}（コード: ${d.code}）`).join(' / ');
+  const totalCount = found.reduce((sum, d) => sum + d.count, 0);
+  companyLabel.textContent = `${label}／全${totalCount}件`;
   statusArea.style.display = 'none';
   table.style.display = '';
 
+  const allItems = found.flatMap(d => d.items);
   const tbody = table.querySelector('tbody');
-  const rows = data.items.map(item => `
+  const rows = allItems.map(item => `
     <tr>
       <td class="tanaban">${escapeHtml(item.tanaban)}</td>
       <td>${escapeHtml(item.hinban)}</td>
