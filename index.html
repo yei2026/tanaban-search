@@ -206,7 +206,7 @@ async function init() {
   const totalCount = found.reduce((sum, d) => sum + d.count, 0);
   const dates = found.map(d => d.updated_at).filter(Boolean).sort();
   const latestDate = dates.length ? dates[dates.length - 1] : null;
-  const dateText = latestDate ? `／データ更新日: ${latestDate}` : '';
+  const dateText = latestDate ? `／データ更新日時: ${latestDate}` : '';
   companyLabel.textContent = `${label}／全${totalCount}件${dateText}`;
   statusArea.style.display = 'none';
   table.style.display = '';
