@@ -86,20 +86,79 @@
     color: var(--brand);
   }
   .dataTables_wrapper .dataTables_filter input {
-    font-size: 16px;
-    padding: 8px 10px;
+    font-size: 20px;
+    padding: 14px 14px;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 8px;
     width: 100%;
     margin-left: 0 !important;
+    height: 52px;
+    box-sizing: border-box;
   }
   .dataTables_wrapper .dataTables_filter {
     width: 100%;
     margin-bottom: 10px;
+    display: flex;
   }
   .dataTables_wrapper .dataTables_filter label {
     width: 100%;
-    display: block;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 0;
+  }
+  .scan-btn {
+    flex: 0 0 auto;
+    width: 52px;
+    height: 52px;
+    font-size: 24px;
+    line-height: 1;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .scan-btn:active {
+    opacity: 0.85;
+  }
+  .scan-overlay {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+  }
+  .scan-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    background: rgba(0,0,0,0.6);
+  }
+  .scan-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    line-height: 1;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  #scanReader {
+    flex: 1;
+    background: #000;
+  }
+  .scan-message {
+    padding: 14px 16px;
+    color: #fff;
+    text-align: center;
+    font-size: 14px;
+    background: rgba(0,0,0,0.6);
+    min-height: 20px;
   }
   .dataTables_wrapper .dataTables_length,
   .dataTables_wrapper .dataTables_info {
@@ -159,8 +218,18 @@
   <div class="footnote">最終更新はデータ更新元に準じます。ご不明点はタビオ奈良までご連絡ください。</div>
 </main>
 
+<div id="scanOverlay" class="scan-overlay" style="display:none">
+  <div class="scan-header">
+    <span>バーコードをかざしてください</span>
+    <button id="scanCloseBtn" class="scan-close" aria-label="閉じる">✕</button>
+  </div>
+  <div id="scanReader"></div>
+  <div id="scanMessage" class="scan-message"></div>
+</div>
+
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 function getCode() {
   const params = new URLSearchParams(window.location.search);
@@ -244,7 +313,71 @@ async function init() {
       { targets: 5, visible: false }
     ],
   });
+
+  setupScanButton(table);
 }
+
+function setupScanButton(table) {
+  const filterLabel = document.querySelector('.dataTables_filter label');
+  if (!filterLabel) return;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'scan-btn';
+  btn.textContent = '📷';
+  btn.setAttribute('aria-label', 'バーコードをスキャン');
+  filterLabel.appendChild(btn);
+
+  btn.addEventListener('click', () => startScan(table));
+}
+
+let scanner = null;
+
+async function startScan(table) {
+  const overlay = document.getElementById('scanOverlay');
+  const msg = document.getElementById('scanMessage');
+  msg.textContent = '';
+  overlay.style.display = 'flex';
+
+  if (typeof Html5Qrcode === 'undefined') {
+    msg.textContent = 'スキャン機能を読み込めませんでした。手入力で検索してください。';
+    return;
+  }
+
+  scanner = new Html5Qrcode('scanReader');
+  try {
+    await scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 260, height: 140 } },
+      (decodedText) => {
+        onScanSuccess(table, decodedText);
+      },
+      () => { /* デコード失敗は毎フレーム起きうるので無視 */ }
+    );
+  } catch (e) {
+    msg.textContent = 'カメラを起動できませんでした。ブラウザのカメラ許可設定をご確認ください。';
+  }
+}
+
+function onScanSuccess(table, decodedText) {
+  stopScan();
+  const dt = $(table).DataTable();
+  dt.search(decodedText).draw();
+  const input = document.querySelector('.dataTables_filter input');
+  if (input) input.value = decodedText;
+}
+
+function stopScan() {
+  const overlay = document.getElementById('scanOverlay');
+  overlay.style.display = 'none';
+  if (scanner) {
+    try {
+      scanner.stop().then(() => scanner && scanner.clear()).catch(() => {});
+    } catch (e) { /* 起動前に閉じた場合など。無視してよい */ }
+    scanner = null;
+  }
+}
+
+document.getElementById('scanCloseBtn').addEventListener('click', stopScan);
 
 function escapeHtml(s) {
   return String(s ?? '').replace(/[&<>"']/g, c => ({
