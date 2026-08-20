@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>棚番検索</title>
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<style>
+  :root {
+    --brand: #0066CC;
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --border: #e2e5e9;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  header {
+    background: var(--brand);
+    color: #fff;
+    padding: 16px 20px;
+  }
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+  }
+  header .company {
+    margin-top: 4px;
+    font-size: 14px;
+    opacity: 0.9;
+  }
+  main {
+    padding: 12px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .status {
+    padding: 40px 16px;
+    text-align: center;
+    color: var(--muted);
+  }
+  .status.error {
+    color: #b91c1c;
+  }
+  table.dataTable {
+    width: 100% !important;
+    font-size: 14px;
+  }
+  table.dataTable td, table.dataTable th {
+    padding: 8px 6px !important;
+  }
+  td.tanaban {
+    font-weight: 700;
+    font-size: 16px;
+    color: var(--brand);
+    white-space: nowrap;
+  }
+  .dataTables_wrapper .dataTables_filter input {
+    font-size: 16px;
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    width: 100%;
+    margin-left: 0 !important;
+  }
+  .dataTables_wrapper .dataTables_filter {
+    width: 100%;
+    margin-bottom: 10px;
+  }
+  .dataTables_wrapper .dataTables_filter label {
+    width: 100%;
+    display: block;
+  }
+  .dataTables_wrapper .dataTables_length,
+  .dataTables_wrapper .dataTables_info {
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .footnote {
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 16px;
+    padding-bottom: 20px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>棚番検索</h1>
+  <div class="company" id="companyLabel">読み込み中...</div>
+</header>
+
+<main>
+  <div class="card">
+    <div id="statusArea" class="status">データを読み込んでいます...</div>
+    <table id="tanabanTable" class="display" style="display:none; width:100%">
+      <thead>
+        <tr>
+          <th>棚番</th>
+          <th>品番</th>
+          <th>カラー</th>
+          <th>品名</th>
+          <th>JAN</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div class="footnote">最終更新はデータ更新元に準じます。ご不明点はタビオ奈良までご連絡ください。</div>
+</main>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script>
+function getCode() {
+  const params = new URLSearchParams(window.location.search);
+  return (params.get('code') || '').trim();
+}
+
+async function init() {
+  const code = getCode();
+  const statusArea = document.getElementById('statusArea');
+  const companyLabel = document.getElementById('companyLabel');
+  const table = document.getElementById('tanabanTable');
+
+  if (!code) {
+    statusArea.textContent = 'URLに会社コードが指定されていません。配布されたQRコード、またはURLを再度ご確認ください。';
+    statusArea.classList.add('error');
+    companyLabel.textContent = '未指定';
+    return;
+  }
+
+  let res;
+  try {
+    res = await fetch(`data/${encodeURIComponent(code)}.json`, { cache: 'no-store' });
+  } catch (e) {
+    statusArea.textContent = '通信エラーが発生しました。電波の良い場所で再度お試しください。';
+    statusArea.classList.add('error');
+    return;
+  }
+
+  if (!res.ok) {
+    statusArea.textContent = '該当する棚番データが見つかりません。URL・QRコードが正しいかご確認のうえ、タビオ奈良までご連絡ください。';
+    statusArea.classList.add('error');
+    companyLabel.textContent = '該当なし';
+    return;
+  }
+
+  const data = await res.json();
+  companyLabel.textContent = `${data.niitaa || ''}（コード: ${data.code}）／全${data.count}件`;
+  statusArea.style.display = 'none';
+  table.style.display = '';
+
+  const tbody = table.querySelector('tbody');
+  const rows = data.items.map(item => `
+    <tr>
+      <td class="tanaban">${escapeHtml(item.tanaban)}</td>
+      <td>${escapeHtml(item.hinban)}</td>
+      <td>${escapeHtml(item.color)}</td>
+      <td>${escapeHtml(item.hinmei)}</td>
+      <td>${escapeHtml(item.jan)}</td>
+    </tr>
+  `).join('');
+  tbody.innerHTML = rows;
+
+  $(table).DataTable({
+    language: {
+      search: '',
+      searchPlaceholder: '品番・JAN・品名で検索',
+      lengthMenu: '_MENU_ 件ずつ表示',
+      info: '_TOTAL_件中 _START_〜_END_件を表示',
+      infoEmpty: '該当なし',
+      infoFiltered: '(全_MAX_件中で絞り込み)',
+      zeroRecords: '一致する商品が見つかりません',
+      paginate: { previous: '前へ', next: '次へ' }
+    },
+    pageLength: 25,
+    order: [],
+  });
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
+init();
+</script>
+</body>
+</html>

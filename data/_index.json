@@ -1,0 +1,417 @@
+[
+  {
+    "code": "6026",
+    "niitaa": null,
+    "count": 2
+  },
+  {
+    "code": "6034",
+    "niitaa": null,
+    "count": 53
+  },
+  {
+    "code": "6057",
+    "niitaa": null,
+    "count": 22
+  },
+  {
+    "code": "6063",
+    "niitaa": null,
+    "count": 12
+  },
+  {
+    "code": "6066",
+    "niitaa": null,
+    "count": 1
+  },
+  {
+    "code": "6068",
+    "niitaa": null,
+    "count": 1
+  },
+  {
+    "code": "6074",
+    "niitaa": null,
+    "count": 11
+  },
+  {
+    "code": "6082",
+    "niitaa": null,
+    "count": 9
+  },
+  {
+    "code": "6085",
+    "niitaa": null,
+    "count": 2
+  },
+  {
+    "code": "6097",
+    "niitaa": null,
+    "count": 1
+  },
+  {
+    "code": "6107",
+    "niitaa": null,
+    "count": 2
+  },
+  {
+    "code": "6134",
+    "niitaa": null,
+    "count": 1
+  },
+  {
+    "code": "6137",
+    "niitaa": null,
+    "count": 5
+  },
+  {
+    "code": "6138",
+    "niitaa": null,
+    "count": 9
+  },
+  {
+    "code": "6139",
+    "niitaa": null,
+    "count": 3
+  },
+  {
+    "code": "6148",
+    "niitaa": "SG",
+    "count": 1
+  },
+  {
+    "code": "7001",
+    "niitaa": "AS",
+    "count": 2490
+  },
+  {
+    "code": "7006",
+    "niitaa": "HP",
+    "count": 2058
+  },
+  {
+    "code": "7007",
+    "niitaa": "DS",
+    "count": 1588
+  },
+  {
+    "code": "7008",
+    "niitaa": "YU",
+    "count": 3272
+  },
+  {
+    "code": "7009",
+    "niitaa": "SE",
+    "count": 3898
+  },
+  {
+    "code": "7011",
+    "niitaa": "SZ",
+    "count": 666
+  },
+  {
+    "code": "7015",
+    "niitaa": "NK",
+    "count": 58
+  },
+  {
+    "code": "7020",
+    "niitaa": "LM",
+    "count": 254
+  },
+  {
+    "code": "7025",
+    "niitaa": "NS",
+    "count": 1171
+  },
+  {
+    "code": "7040",
+    "niitaa": "GO",
+    "count": 1647
+  },
+  {
+    "code": "7041",
+    "niitaa": "TO",
+    "count": 212
+  },
+  {
+    "code": "7042",
+    "niitaa": "NA",
+    "count": 5
+  },
+  {
+    "code": "7045",
+    "niitaa": "TK",
+    "count": 3501
+  },
+  {
+    "code": "7046",
+    "niitaa": "GL",
+    "count": 119
+  },
+  {
+    "code": "7048",
+    "niitaa": "NI",
+    "count": 671
+  },
+  {
+    "code": "7057",
+    "niitaa": "SK",
+    "count": 1728
+  },
+  {
+    "code": "7058",
+    "niitaa": "CO",
+    "count": 506
+  },
+  {
+    "code": "7062",
+    "niitaa": "HL",
+    "count": 433
+  },
+  {
+    "code": "7064",
+    "niitaa": "KY",
+    "count": 1218
+  },
+  {
+    "code": "7072",
+    "niitaa": "WA",
+    "count": 3422
+  },
+  {
+    "code": "7073",
+    "niitaa": "OA",
+    "count": 1545
+  },
+  {
+    "code": "7077",
+    "niitaa": "NT",
+    "count": 1284
+  },
+  {
+    "code": "7083",
+    "niitaa": "OK",
+    "count": 582
+  },
+  {
+    "code": "7086",
+    "niitaa": "KT",
+    "count": 1293
+  },
+  {
+    "code": "7092",
+    "niitaa": "SJ",
+    "count": 1
+  },
+  {
+    "code": "7093",
+    "niitaa": null,
+    "count": 636
+  },
+  {
+    "code": "7094",
+    "niitaa": "DW",
+    "count": 3365
+  },
+  {
+    "code": "7096",
+    "niitaa": "KA",
+    "count": 33
+  },
+  {
+    "code": "7097",
+    "niitaa": "ED",
+    "count": 63
+  },
+  {
+    "code": "7099",
+    "niitaa": "KK",
+    "count": 1906
+  },
+  {
+    "code": "7100",
+    "niitaa": "SY",
+    "count": 3605
+  },
+  {
+    "code": "7103",
+    "niitaa": "TF",
+    "count": 4010
+  },
+  {
+    "code": "7104",
+    "niitaa": "PN",
+    "count": 397
+  },
+  {
+    "code": "7109",
+    "niitaa": "KU",
+    "count": 147
+  },
+  {
+    "code": "7111",
+    "niitaa": "KN",
+    "count": 493
+  },
+  {
+    "code": "7114",
+    "niitaa": "CF",
+    "count": 1
+  },
+  {
+    "code": "7117",
+    "niitaa": "MT",
+    "count": 1086
+  },
+  {
+    "code": "7119",
+    "niitaa": "HT",
+    "count": 155
+  },
+  {
+    "code": "7125",
+    "niitaa": "YA",
+    "count": 521
+  },
+  {
+    "code": "7126",
+    "niitaa": "TP",
+    "count": 2
+  },
+  {
+    "code": "7142",
+    "niitaa": "AT",
+    "count": 1139
+  },
+  {
+    "code": "7143",
+    "niitaa": "HG",
+    "count": 3931
+  },
+  {
+    "code": "7144",
+    "niitaa": "TA",
+    "count": 6139
+  },
+  {
+    "code": "7145",
+    "niitaa": "TU",
+    "count": 65
+  },
+  {
+    "code": "7146",
+    "niitaa": "TS",
+    "count": 124
+  },
+  {
+    "code": "7147",
+    "niitaa": "IM",
+    "count": 109
+  },
+  {
+    "code": "7148",
+    "niitaa": "FK",
+    "count": 27
+  },
+  {
+    "code": "7149",
+    "niitaa": "LK",
+    "count": 337
+  },
+  {
+    "code": "7152",
+    "niitaa": "FB",
+    "count": 82
+  },
+  {
+    "code": "7153",
+    "niitaa": "SB",
+    "count": 77
+  },
+  {
+    "code": "7154",
+    "niitaa": "MI",
+    "count": 18
+  },
+  {
+    "code": "7155",
+    "niitaa": "KS",
+    "count": 125
+  },
+  {
+    "code": "7156",
+    "niitaa": "TN",
+    "count": 2
+  },
+  {
+    "code": "7157",
+    "niitaa": "CK",
+    "count": 281
+  },
+  {
+    "code": "7161",
+    "niitaa": null,
+    "count": 4
+  },
+  {
+    "code": "7162",
+    "niitaa": "KG",
+    "count": 185
+  },
+  {
+    "code": "7163",
+    "niitaa": "NN",
+    "count": 48
+  },
+  {
+    "code": "7164",
+    "niitaa": "NK",
+    "count": 8
+  },
+  {
+    "code": "7165",
+    "niitaa": null,
+    "count": 57
+  },
+  {
+    "code": "7166",
+    "niitaa": null,
+    "count": 65
+  },
+  {
+    "code": "7167",
+    "niitaa": null,
+    "count": 236
+  },
+  {
+    "code": "7168",
+    "niitaa": null,
+    "count": 5
+  },
+  {
+    "code": "7169",
+    "niitaa": "WE",
+    "count": 117
+  },
+  {
+    "code": "7172",
+    "niitaa": null,
+    "count": 3
+  },
+  {
+    "code": "7173",
+    "niitaa": "KD",
+    "count": 20
+  },
+  {
+    "code": "7174",
+    "niitaa": "SU",
+    "count": 15
+  },
+  {
+    "code": "7175",
+    "niitaa": "SF",
+    "count": 1517
+  }
+]
