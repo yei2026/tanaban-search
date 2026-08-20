@@ -54,18 +54,28 @@
   .status.error {
     color: #b91c1c;
   }
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
   table.dataTable {
     width: 100% !important;
+    min-width: 640px;
     font-size: 14px;
   }
   table.dataTable td, table.dataTable th {
-    padding: 8px 6px !important;
+    padding: 8px 10px !important;
+    white-space: nowrap;
+  }
+  table.dataTable td {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   td.tanaban {
     font-weight: 700;
     font-size: 16px;
     color: var(--brand);
-    white-space: nowrap;
   }
   .dataTables_wrapper .dataTables_filter input {
     font-size: 16px;
@@ -107,18 +117,20 @@
 <main>
   <div class="card">
     <div id="statusArea" class="status">データを読み込んでいます...</div>
-    <table id="tanabanTable" class="display" style="display:none; width:100%">
-      <thead>
-        <tr>
-          <th>棚番</th>
-          <th>品番</th>
-          <th>カラー</th>
-          <th>品名</th>
-          <th>JAN</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+    <div class="table-scroll">
+      <table id="tanabanTable" class="display" style="display:none; width:100%">
+        <thead>
+          <tr>
+            <th>棚番</th>
+            <th>品番</th>
+            <th>カラー</th>
+            <th>品名</th>
+            <th>JAN</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
   </div>
   <div class="footnote">最終更新はデータ更新元に準じます。ご不明点はタビオ奈良までご連絡ください。</div>
 </main>
