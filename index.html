@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>棚番検索</title>
+<!-- ホーム画面に追加した時にアプリらしく開くための設定 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="棚番検索">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0066CC">
+<link rel="apple-touch-icon" href="icon.png">
+<link rel="icon" href="icon.png">
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
 <style>
   :root {
@@ -98,6 +106,19 @@
     font-size: 13px;
     color: var(--muted);
   }
+  #ptrIndicator {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    text-align: center;
+    padding: 10px;
+    background: #e8f0fe;
+    color: var(--brand);
+    font-size: 13px;
+    font-weight: 600;
+    transform: translateY(-100%);
+    transition: transform 0.15s ease-out;
+    z-index: 999;
+  }
   .footnote {
     text-align: center;
     color: var(--muted);
@@ -108,6 +129,8 @@
 </style>
 </head>
 <body>
+
+<div id="ptrIndicator">↓ 引っ張って更新</div>
 
 <header>
   <h1>棚番検索</h1>
@@ -181,7 +204,10 @@ async function init() {
 
   const label = found.map(d => `${d.niitaa || ''}（コード: ${d.code}）`).join(' / ');
   const totalCount = found.reduce((sum, d) => sum + d.count, 0);
-  companyLabel.textContent = `${label}／全${totalCount}件`;
+  const dates = found.map(d => d.updated_at).filter(Boolean).sort();
+  const latestDate = dates.length ? dates[dates.length - 1] : null;
+  const dateText = latestDate ? `／データ更新日: ${latestDate}` : '';
+  companyLabel.textContent = `${label}／全${totalCount}件${dateText}`;
   statusArea.style.display = 'none';
   table.style.display = '';
 
@@ -226,6 +252,44 @@ function escapeHtml(s) {
   }[c]));
 }
 
+function setupPullToRefresh() {
+  const indicator = document.getElementById('ptrIndicator');
+  const threshold = 70;
+  let startY = 0;
+  let pulling = false;
+
+  window.addEventListener('touchstart', e => {
+    if (window.scrollY === 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    const diff = e.touches[0].clientY - startY;
+    if (diff > 0) {
+      const pull = Math.min(diff, 100);
+      indicator.style.transform = `translateY(${pull - 100}%)`;
+      indicator.textContent = diff > threshold ? '離すと更新します' : '↓ 引っ張って更新';
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', e => {
+    if (!pulling) return;
+    pulling = false;
+    const diff = e.changedTouches[0].clientY - startY;
+    if (diff > threshold) {
+      indicator.textContent = '更新中...';
+      indicator.style.transform = 'translateY(0)';
+      location.reload();
+    } else {
+      indicator.style.transform = 'translateY(-100%)';
+    }
+  });
+}
+
+setupPullToRefresh();
 init();
 </script>
 </body>
