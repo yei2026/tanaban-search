@@ -68,8 +68,10 @@
   }
   table.dataTable {
     width: 100% !important;
-    min-width: 640px;
     font-size: 14px;
+  }
+  #tanabanTable {
+    min-width: 640px;
   }
   table.dataTable td, table.dataTable th {
     padding: 8px 10px !important;
@@ -183,7 +185,6 @@
     background: rgba(0,0,0,0.6);
     min-height: 20px;
   }
-  .print-only { display: none; }
   .print-btn {
     width: 100%;
     padding: 12px;
@@ -199,25 +200,30 @@
   .print-heading { font-size: 18px; font-weight: 700; }
   .print-meta { display: flex; justify-content: space-between; font-size: 12px; color: #333; margin-top: 2px; }
   .print-company { font-weight: 700; }
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
   .print-columns {
-    column-count: 5;
-    column-gap: 10px;
+    column-count: 3;
+    column-gap: 8mm;
   }
   .print-pair {
-    display: flex;
-    justify-content: space-between;
-    gap: 6px;
     font-size: 10.5px;
     border-bottom: 1px solid #ddd;
     padding: 2px 0;
     break-inside: avoid;
+    white-space: nowrap;
   }
-  .print-tanaban { font-weight: 700; }
+  .print-tanaban {
+    font-weight: 700;
+    display: inline-block;
+    width: 16mm;
+  }
   @media print {
     .no-print, header, .tab-row, .footnote, #ptrIndicator { display: none !important; }
     #listPane { display: block !important; }
     #searchPane { display: none !important; }
-    .print-only { display: block; }
     body { background: #fff; }
     .card { box-shadow: none; padding: 0; }
   }
@@ -309,18 +315,7 @@
     <div class="no-print" style="margin-bottom:10px">
       <button type="button" id="printBtn" class="print-btn">印刷する（A4で保存・出力できます）</button>
     </div>
-    <div class="no-print table-scroll">
-      <table id="listTable" class="display" style="width:100%">
-        <thead>
-          <tr>
-            <th>棚番</th>
-            <th>品番</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div class="print-only" id="printSheet">
+    <div id="printSheet">
       <div class="print-header">
         <div class="print-heading">棚番一覧表（品番順）</div>
         <div class="print-meta">
@@ -451,31 +446,8 @@ function setupListView(allItems, found) {
   }
   pairs.sort((a, b) => a.hinban.localeCompare(b.hinban) || a.tanaban.localeCompare(b.tanaban));
 
-  const listTable = document.getElementById('listTable');
-  const tbody = listTable.querySelector('tbody');
-  tbody.innerHTML = pairs.map(p => `
-    <tr>
-      <td class="tanaban-list">${escapeHtml(p.tanaban)}</td>
-      <td>${escapeHtml(p.hinban)}</td>
-    </tr>
-  `).join('');
-
-  $(listTable).DataTable({
-    language: {
-      search: '',
-      searchPlaceholder: '品番で検索',
-      lengthMenu: '_MENU_ 件ずつ表示',
-      info: '_TOTAL_件中 _START_〜_END_件を表示',
-      infoEmpty: '該当なし',
-      infoFiltered: '(全_MAX_件中で絞り込み)',
-      zeroRecords: '一致する品番が見つかりません',
-      paginate: { previous: '前へ', next: '次へ' }
-    },
-    pageLength: 50,
-    order: [],
-  });
-
-  // 印刷用: 画面のページ送り表とは別に、5列に並べた紙面用のレイアウトを作る(枚数を抑えるため)
+  // A4の紙面と同じ密な複数列レイアウトを、画面上でもそのまま常時表示する
+  // (ページ送りではなく、縦スクロールで一気に見られる形にするため)
   const printList = document.getElementById('printList');
   printList.innerHTML = pairs.map(p =>
     `<div class="print-pair"><span class="print-tanaban">${escapeHtml(p.tanaban)}</span><span class="print-hinban">${escapeHtml(p.hinban)}</span></div>`
