@@ -343,11 +343,29 @@ async function startScan(table) {
     return;
   }
 
-  scanner = new Html5Qrcode('scanReader');
+  scanner = new Html5Qrcode('scanReader', {
+    // JAN(EAN-13)・社内バーコード(CODE128)以外は探索しない → 探索コストを大きく削減
+    formatsToSupport: [
+      Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.CODE_128,
+    ],
+    verbose: false,
+  });
   try {
     await scanner.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 260, height: 140 } },
+      {
+        fps: 20,
+        // バーコードは横長なので、正方形ではなく横長の枠にして探索範囲を絞る
+        qrbox: { width: 300, height: 120 },
+        // 背面カメラは鏡像チェック不要 → その分速くなる
+        disableFlip: true,
+        videoConstraints: {
+          facingMode: 'environment',
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+        },
+      },
       (decodedText) => {
         onScanSuccess(table, decodedText);
       },
