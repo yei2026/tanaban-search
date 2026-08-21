@@ -195,20 +195,31 @@
     border-radius: 8px;
     cursor: pointer;
   }
+  .print-header { margin-bottom: 8px; }
+  .print-heading { font-size: 18px; font-weight: 700; }
+  .print-meta { display: flex; justify-content: space-between; font-size: 12px; color: #333; margin-top: 2px; }
+  .print-company { font-weight: 700; }
+  .print-columns {
+    column-count: 5;
+    column-gap: 10px;
+  }
+  .print-pair {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 10.5px;
+    border-bottom: 1px solid #ddd;
+    padding: 2px 0;
+    break-inside: avoid;
+  }
+  .print-tanaban { font-weight: 700; }
   @media print {
     .no-print, header, .tab-row, .footnote, #ptrIndicator { display: none !important; }
     #listPane { display: block !important; }
     #searchPane { display: none !important; }
-    .print-only { display: block; margin: 0 0 10px; font-size: 14px; }
+    .print-only { display: block; }
     body { background: #fff; }
     .card { box-shadow: none; padding: 0; }
-    table.dataTable { font-size: 11px; }
-    .dataTables_wrapper .dataTables_filter,
-    .dataTables_wrapper .dataTables_length,
-    .dataTables_wrapper .dataTables_paginate,
-    .dataTables_wrapper .dataTables_info {
-      display: none !important;
-    }
   }
   .tab-row {
     display: flex;
@@ -298,17 +309,26 @@
     <div class="no-print" style="margin-bottom:10px">
       <button type="button" id="printBtn" class="print-btn">印刷する（A4で保存・出力できます）</button>
     </div>
-    <h2 id="printTitle" class="print-only"></h2>
-    <div class="table-scroll">
+    <div class="no-print table-scroll">
       <table id="listTable" class="display" style="width:100%">
         <thead>
           <tr>
-            <th>品番</th>
             <th>棚番</th>
+            <th>品番</th>
           </tr>
         </thead>
         <tbody></tbody>
       </table>
+    </div>
+    <div class="print-only" id="printSheet">
+      <div class="print-header">
+        <div class="print-heading">棚番一覧表（品番順）</div>
+        <div class="print-meta">
+          <div id="printCreated"></div>
+          <div id="printCompany" class="print-company"></div>
+        </div>
+      </div>
+      <div id="printList" class="print-columns"></div>
     </div>
   </div>
   <div class="footnote">最終更新はデータ更新元に準じます。ご不明点はタビオ奈良までご連絡ください。</div>
@@ -367,8 +387,11 @@ async function init() {
     return;
   }
 
+  // 棚番が4000番台(先頭が「4」)の商品は非継続品のため、検索・一覧表示のどちらからも除外する
+  const allItems = found.flatMap(d => d.items).filter(item => !/^4/.test(item.tanaban || ''));
+
   const label = found.map(d => `${d.niitaa || ''}（コード: ${d.code}）`).join(' / ');
-  const totalCount = found.reduce((sum, d) => sum + d.count, 0);
+  const totalCount = allItems.length;
   const dates = found.map(d => d.updated_at).filter(Boolean).sort();
   const latestDate = dates.length ? dates[dates.length - 1] : null;
   const dateText = latestDate ? `／データ更新日時: ${latestDate}` : '';
@@ -376,7 +399,6 @@ async function init() {
   statusArea.style.display = 'none';
   table.style.display = '';
 
-  const allItems = found.flatMap(d => d.items);
   const tbody = table.querySelector('tbody');
   const rows = allItems.map(item => `
     <tr>
@@ -411,30 +433,32 @@ async function init() {
   });
 
   setupScanButton(table);
-  setupListView(allItems);
+  setupListView(allItems, found);
   setupTabs();
 }
 
-function setupListView(allItems) {
-  // 品番ごとにカラーをまとめ、その品番が入っている棚番(重複なし)を並べる。
-  // 現在配布している一覧表(品番・棚番のみ、カラー別に行を分けない)と同じ形式にするため。
-  const byHinban = new Map();
+function setupListView(allItems, found) {
+  // カラー違いで重複する(品番,棚番)の組は1行にまとめるが、同じ品番でも棚番が違えば
+  // 行を分ける(品番を繰り返し表記する)。実際に配布している紙の一覧表と同じ形式にするため。
+  const seen = new Set();
+  const pairs = [];
   for (const item of allItems) {
-    if (!byHinban.has(item.hinban)) byHinban.set(item.hinban, new Set());
-    if (item.tanaban) byHinban.get(item.hinban).add(item.tanaban);
+    if (!item.tanaban || !item.hinban) continue;
+    const key = item.hinban + ' ' + item.tanaban;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pairs.push({ hinban: item.hinban, tanaban: item.tanaban });
   }
+  pairs.sort((a, b) => a.hinban.localeCompare(b.hinban) || a.tanaban.localeCompare(b.tanaban));
 
   const listTable = document.getElementById('listTable');
   const tbody = listTable.querySelector('tbody');
-  const rows = [...byHinban.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([hinban, tanabanSet]) => `
-      <tr>
-        <td>${escapeHtml(hinban)}</td>
-        <td class="tanaban-list">${escapeHtml([...tanabanSet].sort().join('、'))}</td>
-      </tr>
-    `).join('');
-  tbody.innerHTML = rows;
+  tbody.innerHTML = pairs.map(p => `
+    <tr>
+      <td class="tanaban-list">${escapeHtml(p.tanaban)}</td>
+      <td>${escapeHtml(p.hinban)}</td>
+    </tr>
+  `).join('');
 
   $(listTable).DataTable({
     language: {
@@ -451,26 +475,30 @@ function setupListView(allItems) {
     order: [],
   });
 
-  setupPrintButton(listTable);
+  // 印刷用: 画面のページ送り表とは別に、5列に並べた紙面用のレイアウトを作る(枚数を抑えるため)
+  const printList = document.getElementById('printList');
+  printList.innerHTML = pairs.map(p =>
+    `<div class="print-pair"><span class="print-tanaban">${escapeHtml(p.tanaban)}</span><span class="print-hinban">${escapeHtml(p.hinban)}</span></div>`
+  ).join('');
+
+  setupPrintButton(found);
 }
 
-function setupPrintButton(listTable) {
-  const printTitle = document.getElementById('printTitle');
-  printTitle.textContent = document.getElementById('companyLabel').textContent;
+function setupPrintButton(found) {
+  const companyNames = found.map(d => d.niitaa).filter(Boolean).join('・');
+  document.getElementById('printCompany').textContent = `【${companyNames}】`;
+
+  const dates = found.map(d => d.updated_at).filter(Boolean).sort();
+  const latest = dates.length ? dates[dates.length - 1] : '';
+  // "YYYY-MM-DD HH:MM" -> "YYYY年MM月DD日 HH時MM分"
+  const m = latest.match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+  const createdText = m
+    ? `作成日：${m[1]}年${m[2]}月${m[3]}日 ${m[4]}時${m[5]}分`
+    : `作成日：${latest}`;
+  document.getElementById('printCreated').textContent = createdText;
 
   document.getElementById('printBtn').addEventListener('click', () => {
     window.print();
-  });
-
-  // 印刷時はページ送り(50件ずつ)ではなく全件を1枚の表として出す
-  const dt = $(listTable).DataTable();
-  let savedPageLength = null;
-  window.addEventListener('beforeprint', () => {
-    savedPageLength = dt.page.len();
-    dt.page.len(-1).draw();
-  });
-  window.addEventListener('afterprint', () => {
-    if (savedPageLength !== null) dt.page.len(savedPageLength).draw();
   });
 }
 
