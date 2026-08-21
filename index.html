@@ -183,6 +183,58 @@
     background: rgba(0,0,0,0.6);
     min-height: 20px;
   }
+  .print-only { display: none; }
+  .print-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 600;
+    background: var(--brand);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  @media print {
+    .no-print, header, .tab-row, .footnote, #ptrIndicator { display: none !important; }
+    #listPane { display: block !important; }
+    #searchPane { display: none !important; }
+    .print-only { display: block; margin: 0 0 10px; font-size: 14px; }
+    body { background: #fff; }
+    .card { box-shadow: none; padding: 0; }
+    table.dataTable { font-size: 11px; }
+    .dataTables_wrapper .dataTables_filter,
+    .dataTables_wrapper .dataTables_length,
+    .dataTables_wrapper .dataTables_paginate,
+    .dataTables_wrapper .dataTables_info {
+      display: none !important;
+    }
+  }
+  .tab-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .tab-btn {
+    flex: 1;
+    padding: 12px 0;
+    font-size: 15px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .tab-btn.active {
+    background: var(--brand);
+    border-color: var(--brand);
+    color: #fff;
+  }
+  td.tanaban-list {
+    font-weight: 700;
+    color: var(--brand);
+  }
   .dataTables_wrapper .dataTables_length,
   .dataTables_wrapper .dataTables_info {
     font-size: 13px;
@@ -220,7 +272,11 @@
 </header>
 
 <main>
-  <div class="card">
+  <div class="tab-row" id="tabRow" style="display:none">
+    <button type="button" class="tab-btn active" data-tab="search">検索</button>
+    <button type="button" class="tab-btn" data-tab="list">一覧表示</button>
+  </div>
+  <div class="card" id="searchPane">
     <div id="statusArea" class="status">データを読み込んでいます...</div>
     <div class="table-scroll">
       <table id="tanabanTable" class="display" style="display:none; width:100%">
@@ -232,6 +288,23 @@
             <th>品名</th>
             <th>JAN</th>
             <th>品番カラー</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="card" id="listPane" style="display:none">
+    <div class="no-print" style="margin-bottom:10px">
+      <button type="button" id="printBtn" class="print-btn">印刷する（A4で保存・出力できます）</button>
+    </div>
+    <h2 id="printTitle" class="print-only"></h2>
+    <div class="table-scroll">
+      <table id="listTable" class="display" style="width:100%">
+        <thead>
+          <tr>
+            <th>品番</th>
+            <th>棚番</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -338,6 +411,84 @@ async function init() {
   });
 
   setupScanButton(table);
+  setupListView(allItems);
+  setupTabs();
+}
+
+function setupListView(allItems) {
+  // 品番ごとにカラーをまとめ、その品番が入っている棚番(重複なし)を並べる。
+  // 現在配布している一覧表(品番・棚番のみ、カラー別に行を分けない)と同じ形式にするため。
+  const byHinban = new Map();
+  for (const item of allItems) {
+    if (!byHinban.has(item.hinban)) byHinban.set(item.hinban, new Set());
+    if (item.tanaban) byHinban.get(item.hinban).add(item.tanaban);
+  }
+
+  const listTable = document.getElementById('listTable');
+  const tbody = listTable.querySelector('tbody');
+  const rows = [...byHinban.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([hinban, tanabanSet]) => `
+      <tr>
+        <td>${escapeHtml(hinban)}</td>
+        <td class="tanaban-list">${escapeHtml([...tanabanSet].sort().join('、'))}</td>
+      </tr>
+    `).join('');
+  tbody.innerHTML = rows;
+
+  $(listTable).DataTable({
+    language: {
+      search: '',
+      searchPlaceholder: '品番で検索',
+      lengthMenu: '_MENU_ 件ずつ表示',
+      info: '_TOTAL_件中 _START_〜_END_件を表示',
+      infoEmpty: '該当なし',
+      infoFiltered: '(全_MAX_件中で絞り込み)',
+      zeroRecords: '一致する品番が見つかりません',
+      paginate: { previous: '前へ', next: '次へ' }
+    },
+    pageLength: 50,
+    order: [],
+  });
+
+  setupPrintButton(listTable);
+}
+
+function setupPrintButton(listTable) {
+  const printTitle = document.getElementById('printTitle');
+  printTitle.textContent = document.getElementById('companyLabel').textContent;
+
+  document.getElementById('printBtn').addEventListener('click', () => {
+    window.print();
+  });
+
+  // 印刷時はページ送り(50件ずつ)ではなく全件を1枚の表として出す
+  const dt = $(listTable).DataTable();
+  let savedPageLength = null;
+  window.addEventListener('beforeprint', () => {
+    savedPageLength = dt.page.len();
+    dt.page.len(-1).draw();
+  });
+  window.addEventListener('afterprint', () => {
+    if (savedPageLength !== null) dt.page.len(savedPageLength).draw();
+  });
+}
+
+function setupTabs() {
+  const tabRow = document.getElementById('tabRow');
+  const searchPane = document.getElementById('searchPane');
+  const listPane = document.getElementById('listPane');
+  tabRow.style.display = 'flex';
+
+  tabRow.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabRow.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const isList = btn.dataset.tab === 'list';
+      searchPane.style.display = isList ? 'none' : '';
+      listPane.style.display = isList ? '' : 'none';
+    });
+  });
 }
 
 function setupScanButton(table) {
