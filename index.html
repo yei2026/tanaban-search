@@ -344,20 +344,26 @@ async function startScan(table) {
   }
 
   scanner = new Html5Qrcode('scanReader', {
-    // JAN(EAN-13)・社内バーコード(CODE128)以外は探索しない → 探索コストを大きく削減
+    // 商品バーコードは実際にはEAN-13以外(UPC-A等)の場合もあるため、絞りすぎず主要な形式を許可する
     formatsToSupport: [
       Html5QrcodeSupportedFormats.EAN_13,
+      Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A,
+      Html5QrcodeSupportedFormats.UPC_E,
       Html5QrcodeSupportedFormats.CODE_128,
+      Html5QrcodeSupportedFormats.ITF,
     ],
+    // 対応端末では、ブラウザ標準の高速なバーコード検出機能を優先的に使う
+    useBarCodeDetectorIfSupported: true,
     verbose: false,
   });
   try {
     await scanner.start(
       { facingMode: 'environment' },
       {
-        fps: 20,
+        fps: 12,
         // バーコードは横長なので、正方形ではなく横長の枠にして探索範囲を絞る
-        qrbox: { width: 300, height: 120 },
+        qrbox: { width: 300, height: 130 },
         // 背面カメラは鏡像チェック不要 → その分速くなる
         disableFlip: true,
         videoConstraints: {
@@ -371,6 +377,7 @@ async function startScan(table) {
       },
       () => { /* デコード失敗は毎フレーム起きうるので無視 */ }
     );
+    msg.textContent = 'ピントが合わない場合は、少し離してからゆっくり近づけてください。';
   } catch (e) {
     msg.textContent = 'カメラを起動できませんでした。ブラウザのカメラ許可設定をご確認ください。';
   }
